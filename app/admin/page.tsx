@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -10,6 +12,10 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, Users, Calendar, TrendingUp, MapPin, Star, Clock, CheckCircle, Moon, Sun } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 // Mock data for admin dashboard
 const mockStats = {
@@ -121,6 +127,18 @@ export default function AdminPage() {
   const [bookings, setBookings] = useState(mockRecentBookings)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
+  const [selectedBooking, setSelectedBooking] = useState<any>(null)
+  const [isViewBookingOpen, setIsViewBookingOpen] = useState(false)
+  const [selectedTurf, setSelectedTurf] = useState<any>(null)
+  const [isEditTurfOpen, setIsEditTurfOpen] = useState(false)
+  const [isAddTurfOpen, setIsAddTurfOpen] = useState(false)
+  const [newTurf, setNewTurf] = useState({
+    name: "",
+    location: "",
+    sport: "",
+    pricePerHour: "",
+    facilities: "",
+  })
 
   useEffect(() => {
     // Check if user is admin
@@ -163,6 +181,47 @@ export default function AdminPage() {
       prev.map((booking) => (booking.id === bookingId ? { ...booking, status: "confirmed" } : booking)),
     )
     setSuccessMessage(`Booking #${bookingId} has been approved successfully!`)
+    setTimeout(() => setSuccessMessage(""), 3000)
+  }
+
+  // Handle view booking
+  const handleViewBooking = (booking: any) => {
+    setSelectedBooking(booking)
+    setIsViewBookingOpen(true)
+  }
+
+  // Handle edit turf
+  const handleEditTurf = (turf: any) => {
+    setSelectedTurf(turf)
+    setIsEditTurfOpen(true)
+  }
+
+  // Handle add new turf
+  const handleAddTurf = () => {
+    setIsAddTurfOpen(true)
+  }
+
+  // Handle save new turf
+  const handleSaveNewTurf = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Simulate adding new turf
+    setSuccessMessage("New turf has been added successfully!")
+    setIsAddTurfOpen(false)
+    setNewTurf({
+      name: "",
+      location: "",
+      sport: "",
+      pricePerHour: "",
+      facilities: "",
+    })
+    setTimeout(() => setSuccessMessage(""), 3000)
+  }
+
+  // Handle save turf changes
+  const handleSaveTurfChanges = () => {
+    setSuccessMessage(`${selectedTurf?.name} has been updated successfully!`)
+    setIsEditTurfOpen(false)
+    setSelectedTurf(null)
     setTimeout(() => setSuccessMessage(""), 3000)
   }
 
@@ -380,6 +439,7 @@ export default function AdminPage() {
                               size="sm"
                               variant="outline"
                               className="dark:border-gray-600 dark:text-gray-300 bg-transparent"
+                              onClick={() => handleViewBooking(booking)}
                             >
                               View
                             </Button>
@@ -405,7 +465,9 @@ export default function AdminPage() {
           <TabsContent value="turfs" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold dark:text-white">Turf Management</h2>
-              <Button className="bg-green-600 hover:bg-green-700">Add New Turf</Button>
+              <Button className="bg-green-600 hover:bg-green-700" onClick={handleAddTurf}>
+                Add New Turf
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -445,6 +507,7 @@ export default function AdminPage() {
                         size="sm"
                         variant="outline"
                         className="flex-1 bg-transparent dark:border-gray-600 dark:text-gray-300"
+                        onClick={() => handleEditTurf(turf)}
                       >
                         Edit
                       </Button>
@@ -452,6 +515,7 @@ export default function AdminPage() {
                         size="sm"
                         variant="outline"
                         className="flex-1 bg-transparent dark:border-gray-600 dark:text-gray-300"
+                        onClick={() => handleViewBooking(turf)}
                       >
                         View
                       </Button>
@@ -561,6 +625,195 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* View Booking Modal */}
+        <Dialog open={isViewBookingOpen} onOpenChange={setIsViewBookingOpen}>
+          <DialogContent className="max-w-2xl dark:bg-gray-800 dark:border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="dark:text-white">Booking Details</DialogTitle>
+            </DialogHeader>
+            {selectedBooking && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="dark:text-gray-300">Booking ID</Label>
+                    <p className="font-semibold dark:text-white">#{selectedBooking.id}</p>
+                  </div>
+                  <div>
+                    <Label className="dark:text-gray-300">Status</Label>
+                    <Badge className={getStatusColor(selectedBooking.status)}>{selectedBooking.status}</Badge>
+                  </div>
+                  <div>
+                    <Label className="dark:text-gray-300">Customer Name</Label>
+                    <p className="font-semibold dark:text-white">{selectedBooking.user}</p>
+                  </div>
+                  <div>
+                    <Label className="dark:text-gray-300">Turf</Label>
+                    <p className="font-semibold dark:text-white">{selectedBooking.turf}</p>
+                  </div>
+                  <div>
+                    <Label className="dark:text-gray-300">Date</Label>
+                    <p className="font-semibold dark:text-white">{selectedBooking.date}</p>
+                  </div>
+                  <div>
+                    <Label className="dark:text-gray-300">Time</Label>
+                    <p className="font-semibold dark:text-white">{selectedBooking.time}</p>
+                  </div>
+                  <div>
+                    <Label className="dark:text-gray-300">Amount</Label>
+                    <p className="font-semibold dark:text-white">₹{selectedBooking.amount}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-4">
+                  {selectedBooking.status === "pending" && (
+                    <Button
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => {
+                        handleApproveBooking(selectedBooking.id)
+                        setIsViewBookingOpen(false)
+                      }}
+                    >
+                      Approve Booking
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={() => setIsViewBookingOpen(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Turf Modal */}
+        <Dialog open={isEditTurfOpen} onOpenChange={setIsEditTurfOpen}>
+          <DialogContent className="max-w-2xl dark:bg-gray-800 dark:border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="dark:text-white">Edit Turf</DialogTitle>
+            </DialogHeader>
+            {selectedTurf && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="dark:text-gray-300">Turf Name</Label>
+                    <Input
+                      defaultValue={selectedTurf.name}
+                      className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label className="dark:text-gray-300">Location</Label>
+                    <Input
+                      defaultValue={selectedTurf.location}
+                      className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label className="dark:text-gray-300">Sport</Label>
+                    <Input
+                      defaultValue={selectedTurf.sport}
+                      className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label className="dark:text-gray-300">Rating</Label>
+                    <Input
+                      defaultValue={selectedTurf.rating}
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="5"
+                      className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="dark:text-gray-300">Facilities</Label>
+                  <Textarea
+                    defaultValue="Floodlights, Parking, Changing Rooms"
+                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button className="bg-green-600 hover:bg-green-700" onClick={handleSaveTurfChanges}>
+                    Save Changes
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsEditTurfOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Add New Turf Modal */}
+        <Dialog open={isAddTurfOpen} onOpenChange={setIsAddTurfOpen}>
+          <DialogContent className="max-w-2xl dark:bg-gray-800 dark:border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="dark:text-white">Add New Turf</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSaveNewTurf} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="dark:text-gray-300">Turf Name</Label>
+                  <Input
+                    value={newTurf.name}
+                    onChange={(e) => setNewTurf({ ...newTurf, name: e.target.value })}
+                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label className="dark:text-gray-300">Location</Label>
+                  <Input
+                    value={newTurf.location}
+                    onChange={(e) => setNewTurf({ ...newTurf, location: e.target.value })}
+                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label className="dark:text-gray-300">Sport</Label>
+                  <Input
+                    value={newTurf.sport}
+                    onChange={(e) => setNewTurf({ ...newTurf, sport: e.target.value })}
+                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label className="dark:text-gray-300">Price per Hour (₹)</Label>
+                  <Input
+                    value={newTurf.pricePerHour}
+                    onChange={(e) => setNewTurf({ ...newTurf, pricePerHour: e.target.value })}
+                    type="number"
+                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="dark:text-gray-300">Facilities (comma separated)</Label>
+                <Textarea
+                  value={newTurf.facilities}
+                  onChange={(e) => setNewTurf({ ...newTurf, facilities: e.target.value })}
+                  placeholder="e.g., Floodlights, Parking, Changing Rooms"
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                />
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                  Add Turf
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setIsAddTurfOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
